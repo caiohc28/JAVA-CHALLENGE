@@ -20,9 +20,11 @@ Essa funcionalidade, embora simples à primeira vista, é fundamental para opera
 git clone https://github.com/caiohc28/JAVA-CHALLENGE.git
 cd JAVA-CHALLENGE
 ``
+
 ``
 docker build -t javadocker .
 ``
+
 ``
 docker run -d -p 8088:8080 javadocker
 ``
