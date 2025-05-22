@@ -6,11 +6,13 @@ import com.example.checkpoint.dto.UpdateFuncionarioDTO;
 import com.example.checkpoint.service.FuncionarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -21,18 +23,21 @@ public class FuncionarioController {
     private FuncionarioService funcionarioService;
 
     @GetMapping
-    public ResponseEntity<List<FuncionarioResponseDTO>> getAllFuncionarios() {
-        List<FuncionarioResponseDTO> funcionarios = funcionarioService.findAll();
+    @Cacheable("funcionarios")
+    public ResponseEntity<Page<FuncionarioResponseDTO>> getAllFuncionarios(Pageable pageable) {
+        Page<FuncionarioResponseDTO> funcionarios = funcionarioService.findAll(pageable);
         return ResponseEntity.ok(funcionarios);
     }
 
     @GetMapping("/{id}")
+    @Cacheable(value = "funcionarioPorId", key = "#id")
     public ResponseEntity<FuncionarioResponseDTO> getFuncionarioById(@PathVariable Integer id) {
         Optional<FuncionarioResponseDTO> funcionarioDTO = funcionarioService.findById(id);
         return funcionarioDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cpf/{cpf}")
+    @Cacheable(value = "funcionarioPorCpf", key = "#cpf")
     public ResponseEntity<FuncionarioResponseDTO> getFuncionarioByCpf(@PathVariable String cpf) {
         Optional<FuncionarioResponseDTO> funcionarioDTO = funcionarioService.findByCpf(cpf);
         return funcionarioDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -44,7 +49,7 @@ public class FuncionarioController {
             FuncionarioResponseDTO novoFuncionario = funcionarioService.saveFromDTO(funcionarioDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(novoFuncionario);
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
-            return ResponseEntity.badRequest().build(); // Ou um erro mais específico, como 404 se a moto não for encontrada
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -58,7 +63,7 @@ public class FuncionarioController {
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Outros erros
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -66,7 +71,7 @@ public class FuncionarioController {
     public ResponseEntity<Void> deleteFuncionario(@PathVariable Integer id) {
         try {
             funcionarioService.deleteById(id);
-            return ResponseEntity.noContent().build(); // Correto, sem corpo de resposta
+            return ResponseEntity.noContent().build();
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
@@ -74,4 +79,3 @@ public class FuncionarioController {
         }
     }
 }
-

@@ -5,10 +5,14 @@ import com.example.checkpoint.exception.ResourceNotFoundException;
 import com.example.checkpoint.model.Moto;
 import com.example.checkpoint.repository.MotoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Optional;
 
+import java.util.Optional;
 
 @Service
 public class MotoService {
@@ -16,10 +20,11 @@ public class MotoService {
     @Autowired
     private MotoRepository motoRepository;
 
-    public List<Moto> findAll() {
-        return motoRepository.findAll();
+    public Page<Moto> findAll(Pageable pageable) {
+        return motoRepository.findAll(pageable);
     }
 
+    @Cacheable(value = "motos", key = "#id")
     public Optional<Moto> findById(Integer id) {
         return motoRepository.findById(id);
     }
@@ -28,33 +33,16 @@ public class MotoService {
         return motoRepository.findByPlaca(placa);
     }
 
-    // Método antigo, pode ser mantido para compatibilidade interna ou removido
-    public Moto save(Moto moto) {
-        return motoRepository.save(moto);
-    }
-
-    // Novo método para salvar usando DTO (para o POST)
-    public Moto saveFromDTO(UpdateMotoDTO dto) { // Reutilizando UpdateMotoDTO para simplicidade, idealmente seria CreateMotoDTO
+    @CacheEvict(value = "motos", allEntries = true)
+    public Moto saveFromDTO(UpdateMotoDTO dto) {
         Moto moto = new Moto();
         moto.setPlaca(dto.getPlaca());
         moto.setModelo(dto.getModelo());
         moto.setSituacao(dto.getSituacao());
-        // Adicionar validação para placa duplicada aqui, se necessário, antes de salvar
-        // Ex: if(motoRepository.findByPlaca(dto.getPlaca()).isPresent()) { throw new DataIntegrityViolationException("Placa já cadastrada"); }
         return motoRepository.save(moto);
     }
 
-    // Método antigo, pode ser mantido ou removido
-    public Moto update(Integer id, Moto motoDetails) {
-        Moto moto = motoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Moto não encontrada com id: " + id));
-        moto.setPlaca(motoDetails.getPlaca());
-        moto.setModelo(motoDetails.getModelo());
-        moto.setSituacao(motoDetails.getSituacao());
-        return motoRepository.save(moto);
-    }
-
-    // Novo método para atualizar usando DTO (para o PUT)
+    @CachePut(value = "motos", key = "#id")
     public Moto updateFromDTO(Integer id, UpdateMotoDTO dto) {
         Moto moto = motoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Moto não encontrada com id: " + id));
@@ -62,10 +50,10 @@ public class MotoService {
         moto.setPlaca(dto.getPlaca());
         moto.setModelo(dto.getModelo());
         moto.setSituacao(dto.getSituacao());
-        // Adicionar validação para placa duplicada aqui, se necessário, antes de salvar (se a placa puder ser alterada)
         return motoRepository.save(moto);
     }
 
+    @CacheEvict(value = "motos", key = "#id")
     public void deleteById(Integer id) {
         if (!motoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Moto não encontrada com id: " + id);

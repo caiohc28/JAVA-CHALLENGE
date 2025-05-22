@@ -1,14 +1,17 @@
 package com.example.checkpoint.controller;
 
-import com.example.checkpoint.dto.UpdateMotoDTO; // Importar o novo DTO
+import com.example.checkpoint.dto.UpdateMotoDTO;
 import com.example.checkpoint.model.Moto;
 import com.example.checkpoint.service.MotoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 
 @RestController
@@ -19,30 +22,30 @@ public class MotoController {
     private MotoService motoService;
 
     @GetMapping
-    public ResponseEntity<List<Moto>> getAllMotos() {
-        List<Moto> motos = motoService.findAll();
+    @Cacheable("motos") // Cache para a listagem de motos
+    public ResponseEntity<Page<Moto>> getAllMotos(Pageable pageable) {
+        Page<Moto> motos = motoService.findAll(pageable);
         return ResponseEntity.ok(motos);
     }
 
     @GetMapping("/{id}")
+    @Cacheable(value = "motoPorId", key = "#id") // Cache individual por ID
     public ResponseEntity<Moto> getMotoById(@PathVariable Integer id) {
         Optional<Moto> moto = motoService.findById(id);
-        // A resposta aqui já está enxuta devido ao @JsonIgnore na entidade Moto
         return moto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/placa/{placa}")
+    @Cacheable(value = "motoPorPlaca", key = "#placa")
     public ResponseEntity<Moto> getMotoByPlaca(@PathVariable String placa) {
         Optional<Moto> moto = motoService.findByPlaca(placa);
         return moto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Moto> createMoto(@Valid @RequestBody UpdateMotoDTO motoDTO) { // Usar DTO para criação também é uma boa prática
-        // Por simplicidade, vamos assumir que o UpdateMotoDTO pode ser usado para criação também,
-        // mas idealmente teríamos um CreateMotoDTO.
+    public ResponseEntity<Moto> createMoto(@Valid @RequestBody UpdateMotoDTO motoDTO) {
         try {
-            Moto novaMoto = motoService.saveFromDTO(motoDTO); // Supõe um método saveFromDTO no serviço
+            Moto novaMoto = motoService.saveFromDTO(motoDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(novaMoto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -50,11 +53,11 @@ public class MotoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Moto> updateMoto(@PathVariable Integer id, @Valid @RequestBody UpdateMotoDTO motoDTO) { // Usando UpdateMotoDTO
+    public ResponseEntity<Moto> updateMoto(@PathVariable Integer id, @Valid @RequestBody UpdateMotoDTO motoDTO) {
         try {
-            Moto motoAtualizada = motoService.updateFromDTO(id, motoDTO); // Novo método no serviço
+            Moto motoAtualizada = motoService.updateFromDTO(id, motoDTO);
             return ResponseEntity.ok(motoAtualizada);
-        } catch (RuntimeException e) { // Idealmente, capturar ResourceNotFoundException especificamente
+        } catch (RuntimeException e) {
             if (e.getMessage().contains("não encontrada")) {
                 return ResponseEntity.notFound().build();
             }
@@ -69,7 +72,7 @@ public class MotoController {
         try {
             motoService.deleteById(id);
             return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) { // Idealmente, capturar ResourceNotFoundException
+        } catch (RuntimeException e) {
             if (e.getMessage().contains("não encontrada")) {
                 return ResponseEntity.notFound().build();
             }
@@ -77,4 +80,3 @@ public class MotoController {
         }
     }
 }
-
