@@ -6,6 +6,27 @@
 - Antonio Lino (RM 554518)
 - Caio Henrique (RM 554600)
 
+## Descrição do Projeto
+O JAVA-CHALLENGE é uma aplicação desenvolvida em Java como parte de uma iniciativa colaborativa com a Mottu, empresa referência em soluções de mobilidade urbana. O objetivo central do projeto é oferecer uma plataforma robusta, escalável e de fácil manutenção para o gerenciamento inteligente de motocicletas e funcionários.
+
+## 🚀 Inovação
+A inovação do projeto está na correlação inteligente entre veículos e operadores. Desenvolvemos um sistema que não apenas realiza o cadastro de motos e colaboradores, mas que também mapeia dinamicamente qual funcionário está associado a qual moto, permitindo um controle mais eficiente, auditável e estratégico da frota. Além disso, o projeto possue integração com Docker, para a melhora de portabilidade e o uso do banco de dados H2, deixando simples e leve.
+
+Essa funcionalidade, embora simples à primeira vista, é fundamental para operações logísticas modernas — reduzindo erros operacionais, facilitando o rastreio de ativos e contribuindo diretamente para a eficiência operacional e redução de custos.
+
+## Execução com DOCKER
+
+``
+git clone https://github.com/caiohc28/JAVA-CHALLENGE.git
+cd JAVA-CHALLENGE
+``
+``
+docker build -t javadocker .
+``
+``
+docker run -d -p 8088:8080 javadocker
+``
+
 ## Exemplos de Comandos INSERT 
 INSERT INTO moto (placa, modelo, situacao) VALUES ('ABC1A23', 'CG 160', 'Dentro');
 
