@@ -4,11 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// DTO para atualização de Moto
-public class UpdateMotoDTO {
-
-    // ID não precisa ser validado aqui, pois vem do PathVariable
-    private Integer id;
+// DTO para criação de Moto (sem ID)
+public class CreateMotoDTO {
 
     @NotBlank(message = "A placa é obrigatória.")
     @Size(max = 10, message = "A placa deve ter no máximo 10 caracteres.")
@@ -24,26 +21,16 @@ public class UpdateMotoDTO {
     private String situacao;
 
     // Construtores
-    public UpdateMotoDTO() {
+    public CreateMotoDTO() {
     }
 
-    // Construtor atualizado para usar Integer para ID
-    public UpdateMotoDTO(Integer id, String placa, String modelo, String situacao) {
-        this.id = id;
+    public CreateMotoDTO(String placa, String modelo, String situacao) {
         this.placa = placa;
         this.modelo = modelo;
         this.situacao = situacao;
     }
 
-    // Getters e Setters atualizados para usar Integer para ID
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
+    // Getters e Setters
     public String getPlaca() {
         return placa;
     }

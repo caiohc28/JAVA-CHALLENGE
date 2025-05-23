@@ -9,9 +9,6 @@ import jakarta.validation.constraints.Size;
 
 public class CreateFuncionarioDTO {
 
-    @NotNull(message = "O ID do funcionário é obrigatório.")
-    private Integer id;
-
     @NotBlank(message = "O nome é obrigatório.")
     @Size(max = 100, message = "O nome deve ter no máximo 100 caracteres.")
     private String nome;
@@ -33,8 +30,7 @@ public class CreateFuncionarioDTO {
     public CreateFuncionarioDTO() {
     }
 
-    public CreateFuncionarioDTO(Integer id, String nome, String cpf, String telefone, String tipoFuncionario, Integer motoId) {
-        this.id = id;
+    public CreateFuncionarioDTO( String nome, String cpf, String telefone, String tipoFuncionario, Integer motoId) {
         this.nome = nome;
         this.cpf = cpf;
         this.telefone = telefone;
@@ -43,13 +39,6 @@ public class CreateFuncionarioDTO {
     }
 
     // Getters e Setters
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
 
     public String getNome() {
         return nome;

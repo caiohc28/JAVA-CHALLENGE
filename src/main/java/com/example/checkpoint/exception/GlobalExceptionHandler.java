@@ -31,10 +31,10 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
 
         List<String> errors = ex.getBindingResult()
-                                .getFieldErrors()
-                                .stream()
-                                .map(x -> x.getDefaultMessage())
-                                .collect(Collectors.toList());
+                .getFieldErrors()
+                .stream()
+                .map(x -> x.getDefaultMessage())
+                .collect(Collectors.toList());
         body.put("errors", errors);
         body.put("path", request.getDescription(false));
         body.put("path", request.getDescription(false));

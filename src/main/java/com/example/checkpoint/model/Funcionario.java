@@ -21,12 +21,14 @@ public class Funcionario {
     private String nome;
 
     @NotBlank(message = "O CPF é obrigatório.")
+    // Mantendo o regex do CPF que permite formatos com ou sem pontos/hífen
     @Pattern(regexp = "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$", message = "Formato de CPF inválido. Use XXX.XXX.XXX-XX ou XXXXXXXXXXX.")
     @Column(name = "cpf", unique = true, nullable = false, length = 14)
     private String cpf;
 
     @Size(max = 15, message = "O telefone deve ter no máximo 15 caracteres.")
-    @Pattern(regexp = "^\\(?[1-9]{2}\\)?[ -]?(?:[2-8]|9[1-9])[0-9]{3}[ -]?[0-9]{4}$", message = "Formato de telefone inválido.")
+    // Regex ajustada para ser um pouco mais permissiva com formatos comuns (incluindo 9 opcional no início)
+    @Pattern(regexp = "^\\(?[1-9]{2}\\)?[ -]?9?[0-9]{4}[ -]?[0-9]{4}$", message = "Formato de telefone inválido.")
     @Column(name = "telefone", length = 15)
     private String telefone;
 
