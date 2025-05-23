@@ -6,7 +6,7 @@ import com.example.checkpoint.dto.UpdateFuncionarioDTO;
 import com.example.checkpoint.service.FuncionarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+// Removido: import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,29 +23,35 @@ public class FuncionarioController {
     private FuncionarioService funcionarioService;
 
     @GetMapping
-    @Cacheable("funcionarios")
+    // Removido: @Cacheable("funcionarios")
     public ResponseEntity<Page<FuncionarioResponseDTO>> getAllFuncionarios(Pageable pageable) {
+        // A lógica de cache está agora no Service
         Page<FuncionarioResponseDTO> funcionarios = funcionarioService.findAll(pageable);
         return ResponseEntity.ok(funcionarios);
     }
 
     @GetMapping("/{id}")
-    @Cacheable(value = "funcionarioPorId", key = "#id")
+    // Removido: @Cacheable(value = "funcionarioPorId", key = "#id")
     public ResponseEntity<FuncionarioResponseDTO> getFuncionarioById(@PathVariable Integer id) {
+        // A lógica de cache está agora no Service
         Optional<FuncionarioResponseDTO> funcionarioDTO = funcionarioService.findById(id);
+        // O Controller apenas monta a ResponseEntity
         return funcionarioDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cpf/{cpf}")
-    @Cacheable(value = "funcionarioPorCpf", key = "#cpf")
+    // Removido: @Cacheable(value = "funcionarioPorCpf", key = "#cpf")
     public ResponseEntity<FuncionarioResponseDTO> getFuncionarioByCpf(@PathVariable String cpf) {
+        // A lógica de cache está agora no Service
         Optional<FuncionarioResponseDTO> funcionarioDTO = funcionarioService.findByCpf(cpf);
+        // O Controller apenas monta a ResponseEntity
         return funcionarioDTO.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<FuncionarioResponseDTO> createFuncionario(@Valid @RequestBody CreateFuncionarioDTO funcionarioDTO) {
         try {
+            // O Service já lida com a invalidação de cache
             FuncionarioResponseDTO novoFuncionario = funcionarioService.saveFromDTO(funcionarioDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(novoFuncionario);
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
@@ -58,6 +64,7 @@ public class FuncionarioController {
     @PutMapping("/{id}")
     public ResponseEntity<FuncionarioResponseDTO> updateFuncionario(@PathVariable Integer id, @Valid @RequestBody UpdateFuncionarioDTO funcionarioDTO) {
         try {
+            // O Service já lida com a atualização e invalidação de cache
             FuncionarioResponseDTO funcionarioAtualizado = funcionarioService.updateFromUpdateDTO(id, funcionarioDTO);
             return ResponseEntity.ok(funcionarioAtualizado);
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
@@ -70,6 +77,7 @@ public class FuncionarioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFuncionario(@PathVariable Integer id) {
         try {
+            // O Service já lida com a invalidação de cache
             funcionarioService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (com.example.checkpoint.exception.ResourceNotFoundException e) {
@@ -79,3 +87,4 @@ public class FuncionarioController {
         }
     }
 }
+

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,20 +40,29 @@ public class FuncionarioService {
         );
     }
 
+    // Cacheable para a lista geral (já presente no Controller, mas pode ser redundante ou movido para cá)
+    // @Cacheable("funcionarios") // Removido do controller, mantido aqui ou vice-versa
     public Page<FuncionarioResponseDTO> findAll(Pageable pageable) {
         return funcionarioRepository.findAll(pageable).map(this::convertToResponseDTO);
     }
 
-    @Cacheable(value = "funcionarios", key = "#id")
+    // Cacheable para busca por ID (já presente no Controller)
+    // @Cacheable(value = "funcionarioPorId", key = "#id") // Removido do controller, mantido aqui ou vice-versa
     public Optional<FuncionarioResponseDTO> findById(Integer id) {
         return funcionarioRepository.findById(id).map(this::convertToResponseDTO);
     }
 
+    // Cacheable para busca por CPF (já presente no Controller)
+    // @Cacheable(value = "funcionarioPorCpf", key = "#cpf") // Removido do controller, mantido aqui ou vice-versa
     public Optional<FuncionarioResponseDTO> findByCpf(String cpf) {
         return funcionarioRepository.findByCpf(cpf).map(this::convertToResponseDTO);
     }
 
-    @CacheEvict(value = "funcionarios", allEntries = true)
+    // Ao salvar, evict todos os caches relevantes (lista geral)
+    @Caching(evict = {
+            @CacheEvict(value = "funcionarios", allEntries = true),
+            @CacheEvict(value = "funcionarioPorCpf", allEntries = true) // Limpa cache por CPF também
+    })
     public FuncionarioResponseDTO saveFromDTO(CreateFuncionarioDTO dto) {
         Funcionario funcionario = new Funcionario();
         funcionario.setNome(dto.getNome());
@@ -67,13 +77,24 @@ public class FuncionarioService {
         }
 
         Funcionario saved = funcionarioRepository.save(funcionario);
+        // Não usar @CachePut aqui, pois o ID é gerado após salvar.
+        // A invalidação acima garante que a próxima busca trará o novo dado.
         return convertToResponseDTO(saved);
     }
 
-    @CachePut(value = "funcionarios", key = "#id")
+    // Ao atualizar, usar @CachePut para o ID específico e @CacheEvict para os demais caches
+    @Caching(put = {
+            @CachePut(value = "funcionarioPorId", key = "#id")
+    }, evict = {
+            @CacheEvict(value = "funcionarios", allEntries = true),
+            @CacheEvict(value = "funcionarioPorCpf", allEntries = true) // Limpa cache por CPF também
+    })
     public FuncionarioResponseDTO updateFromUpdateDTO(Integer id, UpdateFuncionarioDTO dto) {
         Funcionario funcionario = funcionarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Funcionário não encontrado com id: " + id));
+
+        // Guarda o CPF antigo para invalidar o cache específico se ele mudar
+        String oldCpf = funcionario.getCpf();
 
         if (dto.getNome() != null) funcionario.setNome(dto.getNome());
         if (dto.getCpf() != null) funcionario.setCpf(dto.getCpf());
@@ -81,24 +102,40 @@ public class FuncionarioService {
         if (dto.getTipoFuncionario() != null) funcionario.setTipoFuncionario(dto.getTipoFuncionario());
 
         if (dto.getMotoId() != null) {
-            if (dto.getMotoId() == 0) {
+            if (dto.getMotoId() == 0) { // Convenção para desassociar moto
                 funcionario.setMoto(null);
             } else {
                 Moto moto = motoRepository.findById(dto.getMotoId())
                         .orElseThrow(() -> new ResourceNotFoundException("Moto não encontrada com id: " + dto.getMotoId()));
                 funcionario.setMoto(moto);
             }
-        }
+        } // Se dto.getMotoId() for null, não faz nada com a moto
 
         Funcionario updated = funcionarioRepository.save(funcionario);
+
+        // Invalida o cache do CPF antigo se ele foi alterado
+        // A anotação @CacheEvict(value = "funcionarioPorCpf", allEntries = true) já cobre isso globalmente.
+        // Se quisesse invalidar apenas o CPF antigo: cacheManager.getCache("funcionarioPorCpf").evict(oldCpf);
+
         return convertToResponseDTO(updated);
     }
 
-    @CacheEvict(value = "funcionarios", key = "#id")
+    // Ao deletar, evict todos os caches relevantes
+    @Caching(evict = {
+            @CacheEvict(value = "funcionarios", allEntries = true),
+            @CacheEvict(value = "funcionarioPorId", key = "#id"),
+            @CacheEvict(value = "funcionarioPorCpf", allEntries = true) // Limpa cache por CPF também
+            // Poderia tentar limpar o CPF específico se soubesse qual era antes de deletar,
+            // mas limpar tudo é mais seguro e simples.
+    })
     public void deleteById(Integer id) {
         if (!funcionarioRepository.existsById(id)) {
             throw new ResourceNotFoundException("Funcionário não encontrado com id: " + id);
         }
+        // Se precisar limpar o cache do CPF específico, buscar o funcionário antes de deletar:
+        // Optional<Funcionario> func = funcionarioRepository.findById(id);
         funcionarioRepository.deleteById(id);
+        // func.ifPresent(f -> cacheManager.getCache("funcionarioPorCpf").evict(f.getCpf()));
     }
 }
+
