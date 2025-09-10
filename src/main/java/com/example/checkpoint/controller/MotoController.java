@@ -2,6 +2,7 @@ package com.example.checkpoint.controller;
 
 import com.example.checkpoint.dto.CreateMotoDTO; // Importar o novo DTO
 import com.example.checkpoint.dto.UpdateMotoDTO;
+import com.example.checkpoint.dto.MotoResponseDTO;
 import com.example.checkpoint.model.Moto;
 import com.example.checkpoint.service.MotoService;
 import jakarta.validation.Valid;
@@ -26,23 +27,45 @@ public class MotoController {
 
     @GetMapping
     @Cacheable("motos")
-    public ResponseEntity<Page<Moto>> getAllMotos(Pageable pageable) {
+    public ResponseEntity<Page<MotoResponseDTO>> getAllMotos(Pageable pageable) {
         Page<Moto> motos = motoService.findAll(pageable);
-        return ResponseEntity.ok(motos);
+
+        // Converter para DTO
+        Page<MotoResponseDTO> motosDTO = motos.map(moto ->
+                new MotoResponseDTO(
+                        moto.getId(),
+                        moto.getPlaca(),
+                        moto.getModelo(),
+                        moto.getSituacao()
+                )
+        );
+
+        return ResponseEntity.ok(motosDTO);
     }
 
     @GetMapping("/{id}")
     @Cacheable(value = "motoPorId", key = "#id")
-    public ResponseEntity<Moto> getMotoById(@PathVariable Integer id) {
+    public ResponseEntity<MotoResponseDTO> getMotoById(@PathVariable Integer id) {
         Optional<Moto> moto = motoService.findById(id);
-        return moto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return moto.map(m -> ResponseEntity.ok(convertToDTO(m)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/placa/{placa}")
     @Cacheable(value = "motoPorPlaca", key = "#placa")
-    public ResponseEntity<Moto> getMotoByPlaca(@PathVariable String placa) {
+    public ResponseEntity<MotoResponseDTO> getMotoByPlaca(@PathVariable String placa) {
         Optional<Moto> moto = motoService.findByPlaca(placa);
-        return moto.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return moto.map(m -> ResponseEntity.ok(convertToDTO(m)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private MotoResponseDTO convertToDTO(Moto moto) {
+        return new MotoResponseDTO(
+                moto.getId(),
+                moto.getPlaca(),
+                moto.getModelo(),
+                moto.getSituacao()
+        );
     }
 
     @PostMapping
