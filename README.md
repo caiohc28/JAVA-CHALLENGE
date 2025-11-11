@@ -51,7 +51,6 @@ INSERT INTO funcionario (moto_id_moto, nome, cpf, telefone, tipo_funcionario) VA
 
 INSERT INTO funcionario (moto_id_moto, nome, cpf, telefone, tipo_funcionario) VALUES (4, 'Ricardo Alves', '789.123.456-00', '11555550000', 'Motoqueiro');
 
-INSERT INTO funcionario (moto_id_moto, nome, cpf, telefone, tipo_funcionario) VALUES (5, 'Marcos Oliveira', '111.111.111-11', '11988887777', 'Motoqueiro');
 
 
 ## Links
