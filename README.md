@@ -12,7 +12,6 @@ O JAVA-CHALLENGE é uma aplicação desenvolvida em Java como parte de uma inici
 ## 🚀 Inovação
 A inovação do projeto está na correlação inteligente entre veículos e operadores. Desenvolvemos um sistema que não apenas realiza o cadastro de motos e colaboradores, mas que também mapeia dinamicamente qual funcionário está associado a qual moto, permitindo um controle mais eficiente, auditável e estratégico da frota. Além disso, o projeto possue integração com Docker, para a melhora de portabilidade e o uso do banco de dados H2, deixando simples e leve.
 
-Essa funcionalidade, embora simples à primeira vista, é fundamental para operações logísticas modernas — reduzindo erros operacionais, facilitando o rastreio de ativos e contribuindo diretamente para a eficiência operacional e redução de custos.
 
 ## Execução com DOCKER
 
